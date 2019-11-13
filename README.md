@@ -26,21 +26,28 @@ And of course Dillinger itself is open source with a [public repository][dill]
 
 ### Installation
 
+* Note:
+* Make sure to have Go installed
+* Run go get -u github.com/ethereum/go-ethereum
+
 `git pull the repository`
 
 ```go
 go run router.go
 ```
+
 `Verify the deployment by navigating to your server address in your preferred browser.`
 
 ```sh
 127.0.0.1:5051
 ```
+
 Note : This web application hosts in port `5051`, please make sure the port `5051` is not occupied.
 
 ```sh
 Enter the ganache host and port in the welcome page Eg: http://127.0.0.1:8545, Good to Go.. Enjoy !
 ```
+
 ### Development
 
 Want to contribute? Great!
