@@ -1,6 +1,8 @@
 # Ganache-CLI-Block-Explorer
+Author : Vinay Awasthi
 
-author: vivekganesan01@gmail.com
+Thanks to Original Author: vivekganesan01@gmail.com
+Go the https://github.com/vivekganesan01/ganache-cli-block-explorer and give a like
 
 Ganache-cli-block-explorer is a web based block reader, which connects to your local ganache (powered by truffle) and explore the block details from the local blockchain network.
 
@@ -53,13 +55,10 @@ First thing:
 ```
 Note: Checkout from `master`.
 
-### Reach out
+### Dependencies
+- add go mod, open command prompt and execute the following commands
+  * go mod init ganache-cli-block-explorer
+  * go mod tidy
 
-```sh
-author: vivekganesan01@gmail.com
-```
-
-### Todos
-
- - Write MORE Tests
- - Working on currency converter
+- install deps
+  * go get github.com/ethereum/go-ethereum/common github.com/ethereum/go-ethereum/core/types github.com/ethereum/go-ethereum/ethclient github.com/gorilla/mux
