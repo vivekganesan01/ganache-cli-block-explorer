@@ -9,7 +9,7 @@
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <title>My Ganache Dashboard</title>
+  <title>Ganache Dashboard</title>
 
   <!-- Custom fonts for this template-->
   <link href="/static/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
@@ -32,7 +32,7 @@
         <div class="sidebar-brand-icon rotate-n-15">
           <i class="fas fa-laugh-wink"></i>
         </div>
-        <div class="sidebar-brand-text mx-3">My Ganache</div>
+        <div class="sidebar-brand-text mx-3">Ganache Block-Explorer</div>
       </a>
 
       <!-- Divider -->
@@ -94,8 +94,8 @@
             <!-- Nav Item - User Information -->
             <li class="nav-item dropdown no-arrow">
               <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Vivek Ganesan</span>
-                <img class="img-profile rounded-circle" src="/static/img/2.png">
+                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Ganache Block-Explorer</span>
+                <img class="img-profile rounded-circle" src="/static/img/ganache_ico.png">
               </a>
             </li>
 
@@ -211,8 +211,8 @@
                     <tr>
                       <th>Block Height</th>
                       <th>Block Hash</th>
-                      <th>Block Nonce</th>
                       <th>Transactions</th>
+                      <th>Transaction Hash</th>
                       <th>Gas Used</th>
                       <th>Mined On</th>
                     </tr>
@@ -222,8 +222,8 @@
                     <tr>
                         <td id="blockNumber{{ .Block }}"><a href='' onclick="this.href='txpage?blocknumber='+document.getElementById('blockNumber{{ .Block }}').textContent">{{ .Block }}</a></td>
                         <td id="blockHash{{ .BlockHash }}"><a href='' onclick="this.href='blockdetails?blockhash='+document.getElementById('blockHash{{ .BlockHash }}').textContent">{{ .BlockHash }}</a></td>
-                        <td>{{ .BlockNonce }}</td>
                         <td>{{ .Transactions }}</td>
+						<td id="Transactionhash{{ .Transactionhash }}"><a href='' onclick="this.href='txinfo?txhash='+document.getElementById('Transactionhash{{ .Transactionhash }}').textContent">{{ .Transactionhash }}</a></td>
                         <td>{{ .GasUsed }}</td>
                         <td>{{ .MinedOn }}</td>
                       </tr>
@@ -237,6 +237,7 @@
           </div>
 
           <!-- Content Row -->
+		   <!-- Get block information-->
           <div class="row">
 
             <div class="col-xl-12 col-lg-12">
@@ -256,11 +257,120 @@
                          <span class="spinner-grow spinner-grow-sm"></span>
                          Submit
                      </button>
-                  <form action="updatelabel">
+					 </form>
+                
                 </div>
               </div>
             </div>
           </div>
+		  
+		     <!-- Content Row -->
+		   <!-- Get txn information-->
+          <div class="row">
+
+            <div class="col-xl-12 col-lg-12">
+              <div class="card shadow mb-4">
+                <!-- Card Header -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Get Txn information</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <form action="txinfo">
+                    <div class="form-group">
+                      <input type="text" class="form-control" id="txhash"  required="required" placeholder="Enter Txn Hash"
+                      name="txhash"  data-validation-required-message="Please provide Txn Hash">
+                    </div>
+                    <button class="btn btn-primary" type="submit">
+                         <span class="spinner-grow spinner-grow-sm"></span>
+                         Submit
+                     </button>
+					 </form>
+                  <form action="updatelabel2"> </form>
+                </div>
+              </div>
+            </div>
+          </div>		
+
+		   <!-- Content Row -->
+		   <!-- Get account information-->
+          <div class="row">
+
+            <div class="col-xl-12 col-lg-12">
+              <div class="card shadow mb-4">
+                <!-- Card Header -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Get Acc Balance information</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <form action="accInfo">
+                    <div class="form-group">
+                      <input type="text" class="form-control" id="accInfo"  required="required" placeholder="Enter acc address"
+                      name="accAdd"  data-validation-required-message="Please provide acc address">
+                    </div>
+                    <button class="btn btn-primary" type="submit">
+                         <span class="spinner-grow spinner-grow-sm"></span>
+                         Submit
+                     </button>
+					 </form>
+                  <form action="updatelabel3"> </form>
+                </div>
+              </div>
+            </div>
+          </div>	
+		  
+		  
+		  
+          <!-- Content Row -->
+
+          <div class="row">
+
+            <div class="col-xl-12 col-lg-12">
+              <div class="card shadow mb-4">
+                <!-- Card Header -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Ganache Accounts</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                  <thead>
+                    <tr>
+                      <th>ADDRESS</th>
+                      <th>BALANCE</th>
+                      <th>TX COUNT</th>
+                      <th>INDEX</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{ range .AccountDetails }}
+                    <tr>
+						<td>{{ .AccAddress }}</td>
+						<td>{{ .AccBalance }}</td>
+						<td>{{ .AccTXNCount }}</td>
+						<td>{{ .AccIndex }}</td>
+                    </tr>
+                    {{ end }}
+                   </tbody>
+                </table>
+              </div>
+                </div>
+              </div>
+            </div>
+          </div>		  
+		  
+		  
+		  
+		  
+		  
+		  
+		  
+		  
+		  
+		  
+		  
 
         </div>
         <!-- /.container-fluid -->
@@ -272,7 +382,7 @@
       <footer class="sticky-footer bg-white">
         <div class="container my-auto">
           <div class="copyright text-center my-auto">
-            <span>Copyright &copy; Your Website 2019</span>
+            <span>Copyright &copy; Your Website 2022</span>
           </div>
         </div>
       </footer>

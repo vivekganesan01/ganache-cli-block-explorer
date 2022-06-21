@@ -31,7 +31,7 @@ And of course Dillinger itself is open source with a [public repository][dill]
 `git pull the repository`
 
 ```go
-go run router.go
+go run router.go rpcRequestGo.go
 ```
 `Verify the deployment by navigating to your server address in your preferred browser.`
 
