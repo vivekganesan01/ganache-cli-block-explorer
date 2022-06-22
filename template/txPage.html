@@ -175,31 +175,43 @@
               <div class="card shadow mb-4">
                 <!-- Card Header -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Transactions</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Transaction Overview</h6>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
                   <div class="table-responsive">
                     <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                       <thead>
-                        <tr>
-                          <th>Tx Hash</th>
-                          <th>Tx Gas</th>
-                          <th>Tx GasPrice</th>
-                          <th>Tx Nonce</th>
-                          <th>Tx To Address</th>
-						  <th>Tx From Address</th>
-						  </tr>
-                      </thead>
+
                       <tbody>
                         {{ range .TxDetails }}
                         <tr>
-                          <td id="{{ .TxHash }}"><a href='' onclick="this.href='txdetails?txhash='+document.getElementById('{{ .TxHash }}').textContent">{{ .TxHash }}</a></td>
+						  <th>Transaction Hash</th>
+                          <td>{{ .TxHash }}</td>
+                        </tr>			
+                        <tr>		
+						  <th>Transaction Gas</th>						
                           <td>{{ .TxGas }}</td>
+                        </tr>			
+                        <tr>	
+						  <th>Transaction Gas Price</th>						
                           <td>{{ .TxGasPrice }}</td>
+                        </tr>			
+                        <tr>		
+						  <th>Transaction Nonce</th>						
                           <td>{{ .TxNonce }}</td>
+                        </tr>			
+                        <tr>	
+						  <th>Transaction To</th>						
                           <td>{{ .TxToAddress }}</td>
+                        </tr>			
+                        <tr>	
+						  <th>Transaction From</th>						
 						   <td>{{ .TxFromAddress }}</td>
+                        </tr>
+                        <tr>	
+						  <th>Transaction Value [wei]</th>						
+						   <td>{{ .TxValue }}</td>
                         </tr>
                         {{ end }}
                       </tbody>

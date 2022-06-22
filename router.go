@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -17,7 +18,6 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-	"encoding/hex"
 )
 
 // *********************** variable ********************************************
@@ -72,13 +72,14 @@ type accDetails struct {
 
 // for transaction details
 type txDetails struct {
-	TxHash      string
-	TxGas       uint64
-	TxGasPrice  uint64
-	TxNonce     uint64
-	TxToAddress string
+	TxHash        string
+	TxGas         uint64
+	TxGasPrice    uint64
+	TxNonce       uint64
+	TxToAddress   string
 	TxFromAddress string
-	TxData 			  string
+	TxData        string
+	TxValue       *big.Int
 }
 
 // for transaction details
@@ -212,7 +213,6 @@ func getAccountDetails(account common.Address, itr int) accountInfo {
 	return accountData
 }
 
-
 /*
 	accountsBalance function: fetches the account details and their balance
 
@@ -224,7 +224,7 @@ func showBalanceInfo(w http.ResponseWriter, r *http.Request) {
 	for _, qs := range r.URL.Query() {
 		qss = qs[0]
 	}
-	
+
 	// load all the block details
 	balance, err := client.BalanceAt(context.Background(), common.BytesToAddress(common.FromHex(qss)), nil)
 	if err != nil {
@@ -250,7 +250,6 @@ func showBalanceInfo(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, accountData)
 
 }
-
 
 // *********************** txpage **********************************************
 
@@ -326,19 +325,25 @@ func txPage(w http.ResponseWriter, r *http.Request) {
 		// getting transaction details
 		for _, tx := range block.Transactions() {
 			// check for toAddress
+			receipt, _ := client.TransactionReceipt(context.Background(), tx.Hash())
 			if tx.To() == nil {
-				toAddress = "Nil (No Tx)"
+				toAddress = receipt.ContractAddress.Hex() + " [CONTRACT CREATION]"
 			} else {
 				toAddress = tx.To().Hex()
 			}
 
+			signer := types.NewEIP155Signer(tx.ChainId())
+			sender, _ := signer.Sender(tx)
+
 			dt := txDetails{
-				TxHash:      tx.Hash().Hex(),
-				TxGas:       tx.Gas(),
-				TxGasPrice:  tx.GasPrice().Uint64(),
-				TxNonce:     tx.Nonce(),
-				TxToAddress: toAddress,
-				TxData: string(tx.Data()),
+				TxHash:        tx.Hash().Hex(),
+				TxGas:         tx.Gas(),
+				TxGasPrice:    tx.GasPrice().Uint64(),
+				TxNonce:       tx.Nonce(),
+				TxToAddress:   toAddress,
+				TxFromAddress: sender.Hex(),
+				TxData:        hex.EncodeToString(tx.Data()),
+				TxValue:       tx.Value(),
 			}
 			// since transaction are multiple, loading it into an array
 			listTxDetails = append(listTxDetails, dt)
@@ -373,7 +378,7 @@ func txDetailsPage(w http.ResponseWriter, r *http.Request) {
 
 	var execStatus bool
 	var log txLogs
-    var receipt *types.Receipt 
+	var receipt *types.Receipt
 	// parsing the request
 	for _, qs := range r.URL.Query() {
 		qss = qs[0]
@@ -389,6 +394,9 @@ func txDetailsPage(w http.ResponseWriter, r *http.Request) {
 		tx, _, err = client.TransactionByHash(context.Background(), hash)
 		receipt, _ = client.TransactionReceipt(context.Background(), hash)
 
+		//		fmt.Println("Value : ", tx.Value())
+		//		fmt.Println("contract address : ", receipt.ContractAddress)
+
 		// check whether block number exists or not
 		if err != nil {
 			execStatus = true
@@ -401,39 +409,38 @@ func txDetailsPage(w http.ResponseWriter, r *http.Request) {
 		} else {
 			execStatus = false
 		}
-				
+
 	}
 
 	// based on block availability execute
-	if execStatus ||  err != nil  {
+	if execStatus || err != nil {
 		// render
 		tmpl := template.Must(template.ParseFiles("template/404.html"))
 		tmpl.Execute(w, log)
 
 	} else {
-	
-	
 
 		// getting transaction details
 
 		// check for toAddress
 		if tx.To() == nil {
-			toAddress = "Nil (No Tx)"
+			toAddress = receipt.ContractAddress.Hex() + " [CONTRACT CREATION]"
 		} else {
 			toAddress = tx.To().Hex()
 		}
-	
+
 		signer := types.NewEIP155Signer(tx.ChainId())
 		sender, _ := signer.Sender(tx)
-	
-	dt := txDetails{
-			TxHash:      tx.Hash().Hex(),
-			TxGas:       tx.Gas(),
-			TxGasPrice:  tx.GasPrice().Uint64(),
-			TxNonce:     tx.Nonce(),
-			TxToAddress: toAddress,
+
+		dt := txDetails{
+			TxHash:        tx.Hash().Hex(),
+			TxGas:         tx.Gas(),
+			TxGasPrice:    tx.GasPrice().Uint64(),
+			TxNonce:       tx.Nonce(),
+			TxToAddress:   toAddress,
 			TxFromAddress: sender.Hex(),
-			TxData: hex.EncodeToString(tx.Data()),
+			TxData:        hex.EncodeToString(tx.Data()),
+			TxValue:       tx.Value(),
 		}
 		// since transaction are multiple, loading it into an array
 		listTxDetails = append(listTxDetails, dt)
@@ -444,7 +451,6 @@ func txDetailsPage(w http.ResponseWriter, r *http.Request) {
 			BlockHash:         receipt.BlockHash.Hex(),
 			Totaltransactions: 1,
 			TxDetails:         listTxDetails,
-			
 		}
 
 		// render
@@ -454,46 +460,6 @@ func txDetailsPage(w http.ResponseWriter, r *http.Request) {
 }
 
 // *********************** txDetails *******************************************
-
-/*
-	txDetailPage function: provide the block transaction details based on the
-	transaction hash.
-
-*/
-func txDetailPage(w http.ResponseWriter, r *http.Request) {
-	/* local variables */
-	var txHash common.Hash // to store transaction hash
-	var log string         // to store logs message
-
-	// parsing request
-	for _, qs := range r.URL.Query() {
-		txHash = common.HexToHash(qs[0])
-	}
-
-	// getting tx details
-	receipt, transactionReceiptErr := client.TransactionReceipt(context.Background(), txHash)
-	kickBack(transactionReceiptErr,
-		"Reason:`@TransactionReceipt` failed. Please pass a valid transaction hash ...")
-
-	// checking if any logs in transaction
-	if len(receipt.Logs) <= 0 {
-		log = "Null"
-	} else {
-		for _, unpackLogs := range receipt.Logs {
-			log = string(unpackLogs.Data)
-		}
-	}
-
-	// load data into struct for rendering
-	data := txLogs{
-		Status: receipt.Status,
-		Log:    log,
-	}
-
-	// render
-	tmpl := template.Must(template.ParseFiles("template/txDetails.html"))
-	tmpl.Execute(w, data)
-}
 
 // *********************** On Account of failure *******************************
 
@@ -635,7 +601,6 @@ func main() {
 	gorilla.HandleFunc("/homepage", homePage)
 	gorilla.HandleFunc("/txpage", txPage)
 	gorilla.HandleFunc("/txinfo", txDetailsPage)
-	gorilla.HandleFunc("/txdetails", txDetailPage)
 	gorilla.HandleFunc("/blockdetails", blockInDetails)
 	gorilla.HandleFunc("/accInfo", showBalanceInfo)
 	gorilla.HandleFunc("/", welcomePage)
