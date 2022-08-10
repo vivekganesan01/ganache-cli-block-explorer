@@ -332,9 +332,9 @@ func txPage(w http.ResponseWriter, r *http.Request) {
 				toAddress = tx.To().Hex()
 			}
 
-			signer := types.NewEIP155Signer(tx.ChainId())
+			signer := types.LatestSignerForChainID(tx.ChainId())
 			sender, _ := signer.Sender(tx)
-
+			fmt.Println("From inside: ", sender.Hex())
 			dt := txDetails{
 				TxHash:        tx.Hash().Hex(),
 				TxGas:         tx.Gas(),
@@ -429,7 +429,7 @@ func txDetailsPage(w http.ResponseWriter, r *http.Request) {
 			toAddress = tx.To().Hex()
 		}
 
-		signer := types.NewEIP155Signer(tx.ChainId())
+		signer := types.LatestSignerForChainID(tx.ChainId())
 		sender, _ := signer.Sender(tx)
 
 		dt := txDetails{
