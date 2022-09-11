@@ -149,7 +149,7 @@
               </div>
             </div>
 
-            <!-- pending tx -->
+            <!-- pending tx 
             <div class="col-xl-3 col-md-6 mb-4">
               <div class="card border-left-info shadow h-100 py-2">
                 <div class="card-body">
@@ -173,7 +173,7 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </div> -->
 
             <!-- suggested gas price -->
             <div class="col-xl-3 col-md-6 mb-4">
@@ -213,7 +213,7 @@
                       <th>Block Hash</th>
                       <th>Transactions</th>
                       <th>Transaction Hash</th>
-                      <th>Gas Used</th>
+                      <th>Transaction Status</th>
                       <th>Mined On</th>
                     </tr>
                   </thead>
@@ -224,7 +224,7 @@
                         <td id="blockHash{{ .BlockHash }}"><a href='' onclick="this.href='blockdetails?blockhash='+document.getElementById('blockHash{{ .BlockHash }}').textContent">{{ .BlockHash }}</a></td>
                         <td>{{ .Transactions }}</td>
 						<td id="Transactionhash{{ .Transactionhash }}"><a href='' onclick="this.href='txinfo?txhash='+document.getElementById('Transactionhash{{ .Transactionhash }}').textContent">{{ .Transactionhash }}</a></td>
-                        <td>{{ .GasUsed }}</td>
+                        <td>{{ .TxnStatus }}</td>
                         <td>{{ .MinedOn }}</td>
                       </tr>
                     {{ end }}

@@ -53,6 +53,7 @@ type blockInfo struct {
 	Gaslimit        uint64
 	ParentHash      string
 	UncleHash       string
+	TxnStatus       string
 }
 
 // for ganache Default Account Details
@@ -87,6 +88,7 @@ type txPages struct {
 	BlockHash         string
 	BlockNumber       *big.Int
 	Totaltransactions int
+	TransactionStatus string
 	TxDetails         []txDetails
 }
 
@@ -154,7 +156,8 @@ func blockInDetails(w http.ResponseWriter, r *http.Request) {
 
 */
 func blockPage(w http.ResponseWriter, bn *big.Int) blockInfo {
-
+	var receipt *types.Receipt
+	var receiptStatus string
 	// getting block based on given number
 	block, _ := client.BlockByNumber(context.Background(), bn)
 	// kickBack(w, r, blockByNumberErr,
@@ -167,6 +170,12 @@ func blockPage(w http.ResponseWriter, bn *big.Int) blockInfo {
 	// getting transaction details
 	for _, tx := range block.Transactions() {
 		tempTxn = tx.Hash().String()
+		receipt, _ = client.TransactionReceipt(context.Background(), tx.Hash())
+	}
+	if receipt.Status == uint64(1) {
+		receiptStatus = "SUCCESSFUL"
+	} else {
+		receiptStatus = "FAILED"
 	}
 	// loading data for rendering
 	blockData := blockInfo{
@@ -177,6 +186,7 @@ func blockPage(w http.ResponseWriter, bn *big.Int) blockInfo {
 		Transactionhash: tempTxn,
 		GasUsed:         block.GasUsed(),
 		MinedOn:         creationTime,
+		TxnStatus:       receiptStatus,
 	}
 	return blockData
 }
@@ -379,6 +389,7 @@ func txDetailsPage(w http.ResponseWriter, r *http.Request) {
 	var execStatus bool
 	var log txLogs
 	var receipt *types.Receipt
+	var receiptStatus string
 	// parsing the request
 	for _, qs := range r.URL.Query() {
 		qss = qs[0]
@@ -393,7 +404,13 @@ func txDetailsPage(w http.ResponseWriter, r *http.Request) {
 		// getting txn with hash
 		tx, _, err = client.TransactionByHash(context.Background(), hash)
 		receipt, _ = client.TransactionReceipt(context.Background(), hash)
+		if receipt.Status == uint64(1) {
+			receiptStatus = "SUCCESSFUL"
+		} else {
+			receiptStatus = "FAILED"
+		}
 
+		fmt.Println("Transaction Status : ", receiptStatus)
 		//		fmt.Println("Value : ", tx.Value())
 		//		fmt.Println("contract address : ", receipt.ContractAddress)
 
@@ -450,6 +467,7 @@ func txDetailsPage(w http.ResponseWriter, r *http.Request) {
 			BlockNumber:       receipt.BlockNumber,
 			BlockHash:         receipt.BlockHash.Hex(),
 			Totaltransactions: 1,
+			TransactionStatus: receiptStatus,
 			TxDetails:         listTxDetails,
 		}
 
