@@ -1,6 +1,8 @@
 # Ganache-CLI-Block-Explorer
+Author : Vinay Awasthi
 
-author: vivekganesan01@gmail.com
+Thanks to Original Author: vivekganesan01@gmail.com
+Go the https://github.com/vivekganesan01/ganache-cli-block-explorer and give a like
 
 Ganache-cli-block-explorer is a web based block reader, which connects to your local ganache (powered by truffle) and explore the block details from the local blockchain network.
 
@@ -29,7 +31,7 @@ And of course Dillinger itself is open source with a [public repository][dill]
 `git pull the repository`
 
 ```go
-go run router.go
+go run router.go rpcRequestGo.go
 ```
 `Verify the deployment by navigating to your server address in your preferred browser.`
 
@@ -53,13 +55,33 @@ First thing:
 ```
 Note: Checkout from `master`.
 
-### Reach out
+### Dependencies
+- add go mod, open command prompt and execute the following commands
+  * go mod init ganache-cli-block-explorer
+  * go mod tidy
 
-```sh
-author: vivekganesan01@gmail.com
-```
+- install deps
+  * go get github.com/ethereum/go-ethereum/common github.com/ethereum/go-ethereum/core/types github.com/ethereum/go-ethereum/ethclient github.com/gorilla/mux
 
-### Todos
 
- - Write MORE Tests
- - Working on currency converter
+### Demo
+
+#### Welcome Page
+
+![image](https://user-images.githubusercontent.com/15568499/175276001-023de8a8-fb67-4b26-b058-712119b89a7f.png)
+
+#### Home Page
+
+![image](https://user-images.githubusercontent.com/15568499/175277496-37625532-0c02-4e93-b79c-2677d2fa7d30.png)
+![image](https://user-images.githubusercontent.com/15568499/175277614-f19ce8d2-53bc-456c-bf3c-022469b5c137.png)
+
+#### Block Details
+![image](https://user-images.githubusercontent.com/15568499/175278638-dd8c5dad-80a9-4653-9c18-94d96de97355.png)
+
+
+#### Transaction Details
+![image](https://user-images.githubusercontent.com/15568499/175278787-5d4e4c6d-da44-480a-98d2-fe0dde236766.png)
+
+#### Account Details
+![image](https://user-images.githubusercontent.com/15568499/175279062-a7a2cdc6-2971-4799-99c5-3745a7c8d17a.png)
+

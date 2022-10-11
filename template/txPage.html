@@ -9,7 +9,7 @@
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <title>My Ganache Dashboard</title>
+  <title>Ganache Dashboard</title>
 
   <!-- Custom fonts for this template-->
   <link href="/static/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
@@ -32,7 +32,7 @@
         <div class="sidebar-brand-icon rotate-n-15">
           <i class="fas fa-laugh-wink"></i>
         </div>
-        <div class="sidebar-brand-text mx-3">My Ganache</div>
+        <div class="sidebar-brand-text mx-3">Ganache Block-Explorer</div>
       </a>
 
       <!-- Divider -->
@@ -94,8 +94,8 @@
             <!-- Nav Item - User Information -->
             <li class="nav-item dropdown no-arrow">
               <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Vivek Ganesan</span>
-                <img class="img-profile rounded-circle" src="/static/img/2.png">
+                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Ganache Block-Explorer</span>
+                <img class="img-profile rounded-circle" src="/static/img/ganache_ico.png">
               </a>
             </li>
 
@@ -166,6 +166,27 @@
               </div>
             </div>
 
+
+            <!-- Transaction Status -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="h5 mb-0 font-weight-bold text-gray-800" >
+					  <h2 style="color:#28A828;">Transaction Status</h2>
+					  </div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{ .TransactionStatus }}</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
           </div>
 
           <!-- Content Row -->
@@ -175,7 +196,63 @@
               <div class="card shadow mb-4">
                 <!-- Card Header -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Transactions</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Transaction Overview</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                      <thead>
+
+                      <tbody>
+                        {{ range .TxDetails }}
+                        <tr>
+						  <th>Transaction Hash</th>
+                          <td>{{ .TxHash }}</td>
+                        </tr>			
+                        <tr>		
+						  <th>Transaction Gas</th>						
+                          <td>{{ .TxGas }}</td>
+                        </tr>			
+                        <tr>	
+						  <th>Transaction Gas Price</th>						
+                          <td>{{ .TxGasPrice }}</td>
+                        </tr>			
+                        <tr>		
+						  <th>Transaction Nonce</th>						
+                          <td>{{ .TxNonce }}</td>
+                        </tr>			
+                        <tr>	
+						  <th>Transaction To</th>						
+                          <td>{{ .TxToAddress }}</td>
+                        </tr>			
+                        <tr>	
+						  <th>Transaction From</th>						
+						   <td>{{ .TxFromAddress }}</td>
+                        </tr>
+                        <tr>	
+						  <th>Transaction Value [wei]</th>						
+						   <td>{{ .TxValue }}</td>
+                        </tr>
+                        {{ end }}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+             
+            </div>
+          </div>
+		  
+		  
+		  
+		  
+		   <div class="row">
+            <div class="col-xl-12 col-lg-12">
+              <div class="card shadow mb-4">
+                <!-- Card Header -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Transactions Data</h6>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
@@ -183,22 +260,16 @@
                     <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                       <thead>
                         <tr>
-                          <th>Tx Hash</th>
-                          <th>Tx Gas</th>
-                          <th>Tx GasPrice</th>
-                          <th>Tx Nonce</th>
-                          <th>Tx To Address</th>
-                        </tr>
+                          <th>Tx Data</th>
+                         
+						  </tr>
                       </thead>
                       <tbody>
                         {{ range .TxDetails }}
                         <tr>
-                          <td id="{{ .TxHash }}"><a href='' onclick="this.href='txdetails?txhash='+document.getElementById('{{ .TxHash }}').textContent">{{ .TxHash }}</a></td>
-                          <td>{{ .TxGas }}</td>
-                          <td>{{ .TxGasPrice }}</td>
-                          <td>{{ .TxNonce }}</td>
-                          <td>{{ .TxToAddress }}</td>
-                        </tr>
+
+                          <td>{{ .TxData }}</td>
+                         </tr>
                         {{ end }}
                       </tbody>
                     </table>
@@ -215,6 +286,8 @@
               </form>
             </div>
           </div>
+		  
+		  
 
         </div>
         <!-- /.container-fluid -->
@@ -226,7 +299,7 @@
       <footer class="sticky-footer bg-white">
         <div class="container my-auto">
           <div class="copyright text-center my-auto">
-            <span>Copyright &copy; Your Website 2019</span>
+            <span>Copyright &copy; Your Website 2022</span>
           </div>
         </div>
       </footer>

@@ -5,18 +5,19 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/params"
+	"github.com/gorilla/mux"
 	"html/template"
 	"log"
 	"math/big"
 	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/gorilla/mux"
 )
 
 // *********************** variable ********************************************
@@ -35,30 +36,51 @@ type sysInfo struct {
 	PendingTransactionCount uint
 	SuggestedGasPrice       *big.Int
 	BlockDetails            []blockInfo
+	AccountDetails          []accountInfo
 }
 
 // for block details
 type blockInfo struct {
-	Block        string
-	BlockHash    string
-	BlockNonce   uint64
-	Transactions int
-	GasUsed      uint64
-	MinedOn      time.Time
-	Difficulty   *big.Int
-	Size         common.StorageSize
-	Gaslimit     uint64
-	ParentHash   string
-	UncleHash    string
+	Block           string
+	BlockHash       string
+	BlockNonce      uint64
+	Transactions    int
+	Transactionhash string
+	GasUsed         uint64
+	MinedOn         time.Time
+	Difficulty      *big.Int
+	Size            common.StorageSize
+	Gaslimit        uint64
+	ParentHash      string
+	UncleHash       string
+	TxnStatus       string
+}
+
+// for ganache Default Account Details
+type accountInfo struct {
+	AccAddress  string
+	AccBalance  string
+	AccTXNCount uint64
+	AccIndex    int
+}
+
+// for ganache Default Account Details
+type accDetails struct {
+	AccAddress  string
+	AccBalance  string
+	AccTXNCount uint64
 }
 
 // for transaction details
 type txDetails struct {
-	TxHash      string
-	TxGas       uint64
-	TxGasPrice  uint64
-	TxNonce     uint64
-	TxToAddress string
+	TxHash        string
+	TxGas         uint64
+	TxGasPrice    uint64
+	TxNonce       uint64
+	TxToAddress   string
+	TxFromAddress string
+	TxData        string
+	TxValue       *big.Int
 }
 
 // for transaction details
@@ -66,6 +88,7 @@ type txPages struct {
 	BlockHash         string
 	BlockNumber       *big.Int
 	Totaltransactions int
+	TransactionStatus string
 	TxDetails         []txDetails
 }
 
@@ -77,7 +100,10 @@ type txLogs struct {
 	Host     string
 }
 
-// *********************** dependency ******************************************
+// *********************** Utility ******************************************
+func weiToEther(wei *big.Int) *big.Float {
+	return new(big.Float).Quo(new(big.Float).SetInt(wei), big.NewFloat(params.Ether))
+}
 
 // *********************** block details ***************************************
 
@@ -130,7 +156,8 @@ func blockInDetails(w http.ResponseWriter, r *http.Request) {
 
 */
 func blockPage(w http.ResponseWriter, bn *big.Int) blockInfo {
-
+	var receipt *types.Receipt
+	var receiptStatus string
 	// getting block based on given number
 	block, _ := client.BlockByNumber(context.Background(), bn)
 	// kickBack(w, r, blockByNumberErr,
@@ -138,17 +165,100 @@ func blockPage(w http.ResponseWriter, bn *big.Int) blockInfo {
 
 	// block creation time
 	creationTime := time.Unix(int64(block.Time()), 0)
-
+	var tempTxn string
+	_ = tempTxn
+	// getting transaction details
+	for _, tx := range block.Transactions() {
+		tempTxn = tx.Hash().String()
+		receipt, _ = client.TransactionReceipt(context.Background(), tx.Hash())
+	}
+	if receipt.Status == uint64(1) {
+		receiptStatus = "SUCCESSFUL"
+	} else {
+		receiptStatus = "FAILED"
+	}
 	// loading data for rendering
 	blockData := blockInfo{
-		Block:        bn.String(),
-		BlockHash:    block.Hash().String(),
-		BlockNonce:   block.Nonce(),
-		Transactions: len(block.Transactions()),
-		GasUsed:      block.GasUsed(),
-		MinedOn:      creationTime,
+		Block:           bn.String(),
+		BlockHash:       block.Hash().String(),
+		BlockNonce:      block.Nonce(),
+		Transactions:    len(block.Transactions()),
+		Transactionhash: tempTxn,
+		GasUsed:         block.GasUsed(),
+		MinedOn:         creationTime,
+		TxnStatus:       receiptStatus,
 	}
 	return blockData
+}
+
+// *********************** homepage **************************************
+
+/*
+	accountsBalance function: fetches the account details and their balance
+
+*/
+func getAccountDetails(account common.Address, itr int) accountInfo {
+
+	// load all the block details
+	balance, err := client.BalanceAt(context.Background(), account, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	balanceETH := weiToEther(balance)
+	//fmt.Println(balanceETH)
+	// Here it fetches the latest block for the connected client (i.e., ganache)
+	numBlock, headerByNumberErr := client.HeaderByNumber(context.Background(), nil)
+	kickBack(headerByNumberErr, "Reason:`@HeaderByNumber` failed. Make sure GANACHE runs @ localhost")
+	nonce, _ := client.NonceAt(context.Background(), account, numBlock.Number)
+	//fmt.Println(state)
+	// loading account data for rendering
+	accountData := accountInfo{
+		AccAddress:  account.String(),
+		AccBalance:  balanceETH.String() + " ETH",
+		AccTXNCount: nonce,
+		AccIndex:    itr,
+	}
+
+	return accountData
+}
+
+/*
+	accountsBalance function: fetches the account details and their balance
+
+*/
+func showBalanceInfo(w http.ResponseWriter, r *http.Request) {
+	var qss string
+
+	// parsing the request
+	for _, qs := range r.URL.Query() {
+		qss = qs[0]
+	}
+
+	// load all the block details
+	balance, err := client.BalanceAt(context.Background(), common.BytesToAddress(common.FromHex(qss)), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	balanceETH := weiToEther(balance)
+	//fmt.Println(balanceETH)
+	// Here it fetches the latest block for the connected client (i.e., ganache)
+	numBlock, headerByNumberErr := client.HeaderByNumber(context.Background(), nil)
+	kickBack(headerByNumberErr, "Reason:`@HeaderByNumber` failed. Make sure GANACHE runs @ localhost")
+	nonce, _ := client.NonceAt(context.Background(), common.BytesToAddress(common.FromHex(qss)), numBlock.Number)
+	//fmt.Println(state)
+	// loading account data for rendering
+	accountData := accDetails{
+		AccAddress:  qss,
+		AccBalance:  balanceETH.String() + " ETH",
+		AccTXNCount: nonce,
+	}
+
+	// render
+	tmpl := template.Must(template.ParseFiles("template/checkBalance.html"))
+	tmpl.Execute(w, accountData)
+
 }
 
 // *********************** txpage **********************************************
@@ -225,18 +335,25 @@ func txPage(w http.ResponseWriter, r *http.Request) {
 		// getting transaction details
 		for _, tx := range block.Transactions() {
 			// check for toAddress
+			receipt, _ := client.TransactionReceipt(context.Background(), tx.Hash())
 			if tx.To() == nil {
-				toAddress = "Nil (No Tx)"
+				toAddress = receipt.ContractAddress.Hex() + " [CONTRACT CREATION]"
 			} else {
 				toAddress = tx.To().Hex()
 			}
 
+			signer := types.LatestSignerForChainID(tx.ChainId())
+			sender, _ := signer.Sender(tx)
+			fmt.Println("From inside: ", sender.Hex())
 			dt := txDetails{
-				TxHash:      tx.Hash().Hex(),
-				TxGas:       tx.Gas(),
-				TxGasPrice:  tx.GasPrice().Uint64(),
-				TxNonce:     tx.Nonce(),
-				TxToAddress: toAddress,
+				TxHash:        tx.Hash().Hex(),
+				TxGas:         tx.Gas(),
+				TxGasPrice:    tx.GasPrice().Uint64(),
+				TxNonce:       tx.Nonce(),
+				TxToAddress:   toAddress,
+				TxFromAddress: sender.Hex(),
+				TxData:        hex.EncodeToString(tx.Data()),
+				TxValue:       tx.Value(),
 			}
 			// since transaction are multiple, loading it into an array
 			listTxDetails = append(listTxDetails, dt)
@@ -256,47 +373,111 @@ func txPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// *********************** txDetails *******************************************
+// /*
+// 	txDetailsPage function: provide the complete transaction details based on the
+// 	transaction hash.
 
-/*
-	txDetailPage function: provide the block transaction details based on the
-	transaction hash.
-
-*/
-func txDetailPage(w http.ResponseWriter, r *http.Request) {
+// */
+func txDetailsPage(w http.ResponseWriter, r *http.Request) {
 	/* local variables */
-	var txHash common.Hash // to store transaction hash
-	var log string         // to store logs message
+	var qss string
+	var tx *types.Transaction
+	var listTxDetails []txDetails
+	var err error
+	var toAddress string
 
-	// parsing request
+	var execStatus bool
+	var log txLogs
+	var receipt *types.Receipt
+	var receiptStatus string
+	// parsing the request
 	for _, qs := range r.URL.Query() {
-		txHash = common.HexToHash(qs[0])
+		qss = qs[0]
 	}
+	_, strConvErr := strconv.Atoi(qss) // converting string into number to pass in client call
 
-	// getting tx details
-	receipt, transactionReceiptErr := client.TransactionReceipt(context.Background(), txHash)
-	kickBack(transactionReceiptErr,
-		"Reason:`@TransactionReceipt` failed. Please pass a valid transaction hash ...")
+	// has to accept either number or hash, so validating
+	// TODO: what if some other happens, has to validate the err
+	if strConvErr != nil {
+		hash := common.HexToHash(qss)
 
-	// checking if any logs in transaction
-	if len(receipt.Logs) <= 0 {
-		log = "Null"
-	} else {
-		for _, unpackLogs := range receipt.Logs {
-			log = string(unpackLogs.Data)
+		// getting txn with hash
+		tx, _, err = client.TransactionByHash(context.Background(), hash)
+		receipt, _ = client.TransactionReceipt(context.Background(), hash)
+		if receipt.Status == uint64(1) {
+			receiptStatus = "SUCCESSFUL"
+		} else {
+			receiptStatus = "FAILED"
 		}
+
+		fmt.Println("Transaction Status : ", receiptStatus)
+		//		fmt.Println("Value : ", tx.Value())
+		//		fmt.Println("contract address : ", receipt.ContractAddress)
+
+		// check whether block number exists or not
+		if err != nil {
+			execStatus = true
+			log = txLogs{
+				Status:   404,
+				Log:      "Txn with given hash is not available in the network",
+				ErrorMsg: err,
+				Host:     "homepage",
+			}
+		} else {
+			execStatus = false
+		}
+
 	}
 
-	// load data into struct for rendering
-	data := txLogs{
-		Status: receipt.Status,
-		Log:    log,
-	}
+	// based on block availability execute
+	if execStatus || err != nil {
+		// render
+		tmpl := template.Must(template.ParseFiles("template/404.html"))
+		tmpl.Execute(w, log)
 
-	// render
-	tmpl := template.Must(template.ParseFiles("template/txDetails.html"))
-	tmpl.Execute(w, data)
+	} else {
+
+		// getting transaction details
+
+		// check for toAddress
+		if tx.To() == nil {
+			toAddress = receipt.ContractAddress.Hex() + " [CONTRACT CREATION]"
+		} else {
+			toAddress = tx.To().Hex()
+		}
+
+		signer := types.LatestSignerForChainID(tx.ChainId())
+		sender, _ := signer.Sender(tx)
+
+		dt := txDetails{
+			TxHash:        tx.Hash().Hex(),
+			TxGas:         tx.Gas(),
+			TxGasPrice:    tx.GasPrice().Uint64(),
+			TxNonce:       tx.Nonce(),
+			TxToAddress:   toAddress,
+			TxFromAddress: sender.Hex(),
+			TxData:        hex.EncodeToString(tx.Data()),
+			TxValue:       tx.Value(),
+		}
+		// since transaction are multiple, loading it into an array
+		listTxDetails = append(listTxDetails, dt)
+
+		// updating final data into struct for rendering
+		data := txPages{
+			BlockNumber:       receipt.BlockNumber,
+			BlockHash:         receipt.BlockHash.Hex(),
+			Totaltransactions: 1,
+			TransactionStatus: receiptStatus,
+			TxDetails:         listTxDetails,
+		}
+
+		// render
+		tmpl := template.Must(template.ParseFiles("template/txPage.html"))
+		tmpl.Execute(w, data)
+	}
 }
+
+// *********************** txDetails *******************************************
 
 // *********************** On Account of failure *******************************
 
@@ -325,7 +506,9 @@ func kickBack(err error, msg string) {
 */
 func homePage(w http.ResponseWriter, r *http.Request) {
 	/* local variables */
-	var _blockdetails []blockInfo // to hold the blockNumber
+	var _blockdetails []blockInfo     // to hold the blockNumber
+	var _accountDetails []accountInfo // to hold the blockNumber
+
 	var clientErr error
 
 	// parsing the request
@@ -368,6 +551,23 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		clientGanache := newClient(NetworkHost)
+		var accounts []string
+
+		err := clientGanache.call("eth_accounts", &accounts)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+		//fmt.Println(accounts)
+		// getting account details
+		itr := 0
+		for _, acc := range accounts {
+			// check for toAddress
+			account := common.HexToAddress(acc)
+			_accountDetails = append(_accountDetails, getAccountDetails(account, itr))
+			itr += 1
+		}
 		// data: values to be rendered
 		data := sysInfo{
 			NumBlock:                numBlock.Number.String(),
@@ -375,6 +575,7 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 			PendingTransactionCount: pendingTxCount,
 			SuggestedGasPrice:       suggestedGasPrice,
 			BlockDetails:            _blockdetails,
+			AccountDetails:          _accountDetails,
 		}
 
 		// mux render
@@ -401,6 +602,7 @@ func welcomePage(w http.ResponseWriter, r *http.Request) {
 */
 func main() {
 
+	fmt.Println("!!!!INITIALIZING SERVER!!!!")
 	// mux router
 	gorilla := mux.NewRouter()
 
@@ -416,8 +618,9 @@ func main() {
 	// controller
 	gorilla.HandleFunc("/homepage", homePage)
 	gorilla.HandleFunc("/txpage", txPage)
-	gorilla.HandleFunc("/txdetails", txDetailPage)
+	gorilla.HandleFunc("/txinfo", txDetailsPage)
 	gorilla.HandleFunc("/blockdetails", blockInDetails)
+	gorilla.HandleFunc("/accInfo", showBalanceInfo)
 	gorilla.HandleFunc("/", welcomePage)
 
 	// http server
@@ -429,5 +632,6 @@ func main() {
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
+	fmt.Println("!!!! SERVER STARTED at ADDRESS : 127.0.0.1:5051 !!!!")
 	log.Fatal(srv.ListenAndServe())
 }
