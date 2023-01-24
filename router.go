@@ -7,17 +7,18 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/params"
-	"github.com/gorilla/mux"
 	"html/template"
 	"log"
 	"math/big"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/params"
+	"github.com/gorilla/mux"
 )
 
 // *********************** variable ********************************************
@@ -404,7 +405,8 @@ func txDetailsPage(w http.ResponseWriter, r *http.Request) {
 		// getting txn with hash
 		tx, _, err = client.TransactionByHash(context.Background(), hash)
 		receipt, _ = client.TransactionReceipt(context.Background(), hash)
-		if receipt.Status == uint64(1) {
+
+		if receipt != nil && receipt.Status == uint64(1) {
 			receiptStatus = "SUCCESSFUL"
 		} else {
 			receiptStatus = "FAILED"
