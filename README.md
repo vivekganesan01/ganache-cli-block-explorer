@@ -43,6 +43,14 @@ Note : This web application hosts in port `5051`, please make sure the port `505
 ```sh
 Enter the ganache host and port in the welcome page Eg: http://127.0.0.1:8545, Good to Go.. Enjoy !
 ```
+
+### Docker
+To run Ganache-CLI-Block-Explorer in docker follow this steps:
+1. Build an image `docker build -t ganache-cli-block-explorer .`
+2. Launch the image exposing the port `docker run -d --publish 5051:5051 ganache-cli-block-explorer`
+	- Note that docker can't access the local machine port (you can still access other ip or docker internal ip)
+
+
 ### Development
 
 Want to contribute? Great!
