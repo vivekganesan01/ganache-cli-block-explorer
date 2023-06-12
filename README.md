@@ -50,6 +50,8 @@ To run Ganache-CLI-Block-Explorer in docker follow this steps:
 2. Launch the image exposing the port `docker run -d --publish 5051:5051 ganache-cli-block-explorer`
 	- Note that docker can't access the local machine port (you can still access other ip or docker internal ip)
 
+Check out also the example for docker compose in docker-examples/docker-compose.yml
+
 
 ### Development
 
