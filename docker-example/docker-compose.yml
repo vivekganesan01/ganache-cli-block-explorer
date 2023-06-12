@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+    # Ganache CLI instance
+    ganache:
+        image: "trufflesuite/ganache-cli:v6.12.2"
+        # SPecify the db folder
+        command: --db /ganache
+        # This will be the service name in the network
+        container_name: ganache
+        restart: unless-stopped
+        ports:
+            - "8545:8545"
+        # Save ganache db to a persistent storage
+        volumes:
+          - ganache:/ganache
+    # Block explorer instance
+    block-explorer:
+      # Build this image as specified in Readme
+      # To access ganache instance use url http://ganache:8545
+      image: "ganache-cli-block-explorer" 
+      ports:
+        - "5051:5051"
+
+volumes:
+    ganache:
