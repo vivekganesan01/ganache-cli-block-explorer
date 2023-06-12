@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"flag"
 )
 
 // *********************** variable ********************************************
@@ -603,6 +604,15 @@ func welcomePage(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	fmt.Println("!!!!INITIALIZING SERVER!!!!")
+
+	// Evaluate launch flags. Syntax is (flag, default value, help message). This allows for go run router.go ... --bind 0.0.0.0
+	// Web interface 
+	bindAddress := flag.String("bind","127.0.0.1", "Bind the web interface to the specified address. Defaults to 127.0.0.1")
+	bindPort := flag.String("port", "5051", "Bind the web interface to the specified port. Defaults to 5051")
+	flag.Parse()
+	// Final URL for Web UI
+	bindURL := *bindAddress + ":" + *bindPort
+
 	// mux router
 	gorilla := mux.NewRouter()
 
@@ -627,11 +637,11 @@ func main() {
 	// Note: Here gorilla is like passing our own server handler into net/http, by default its false
 	srv := &http.Server{
 		Handler: gorilla,
-		Addr:    "127.0.0.1:5051",
+		Addr:    bindURL,
 		// Good practice: enforce timeouts for servers you create!
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-	fmt.Println("!!!! SERVER STARTED at ADDRESS : 127.0.0.1:5051 !!!!")
+	fmt.Println("!!!! SERVER STARTED at ADDRESS : " + bindURL + " !!!!")
 	log.Fatal(srv.ListenAndServe())
 }
