@@ -605,7 +605,7 @@ func main() {
 
 	fmt.Println("!!!!INITIALIZING SERVER!!!!")
 
-	// Evaluate launch flags. Syntax is (flag, default value, help message)
+	// Evaluate launch flags. Syntax is (flag, default value, help message). This allows for go run router.go ... --bind 0.0.0.0
 	// Web interface 
 	bindAddress := flag.String("bind","127.0.0.1", "Bind the web interface to the specified address. Defaults to 127.0.0.1")
 	bindPort := flag.String("port", "5051", "Bind the web interface to the specified port. Defaults to 5051")
